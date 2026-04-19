@@ -1,0 +1,5 @@
+fastapi
+uvicorn[standard]
+pydantic
+ollama
+qdrant-client>=1.7.0

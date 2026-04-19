@@ -1,0 +1,6 @@
+langchain-text-splitters
+langchain-community
+qdrant-client
+tqdm
+ollama
+GitPython

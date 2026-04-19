@@ -1,0 +1,15 @@
+.git
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.env
+venv/
+.venv/
+docker-compose*.yml
+Dockerfile
+.dockerignore
+README.md
+tests/
+notes_repo/
+qdrant_storage/

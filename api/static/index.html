@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG API • Тестовый интерфейс</title>
+    <!-- Font Awesome для иконок -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <!-- Выделение синтаксиса для ответов -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <!-- Marked для рендеринга Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            color: #e2e8f0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Заголовок */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .header .subtitle {
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+
+        .api-url {
+            display: inline-block;
+            background: #334155;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            color: #cbd5e1;
+        }
+
+        .api-url i {
+            margin-right: 8px;
+            color: #10b981;
+        }
+
+        /* Вкладки */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab i {
+            font-size: 1.1rem;
+        }
+
+        .tab:hover {
+            background: #1e293b;
+            color: #cbd5e1;
+        }
+
+        .tab.active {
+            background: #2563eb;
+            color: white;
+        }
+
+        /* Панели */
+        .panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Карточки */
+        .card {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid #334155;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title i {
+            color: #3b82f6;
+        }
+
+        /* Форма */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 14px 16px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            color: #f1f5f9;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        textarea {
+            min-height: 100px;
+        }
+
+        .row {
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+        }
+
+        .row .form-group {
+            flex: 1;
+        }
+
+        /* Кнопки */
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:disabled {
+            background: #475569;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: #334155;
+            color: #cbd5e1;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        /* Переключатель */
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toggle-switch input {
+            width: 44px;
+            height: 24px;
+            appearance: none;
+            background: #334155;
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .toggle-switch input:checked {
+            background: #3b82f6;
+        }
+
+        .toggle-switch input::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s;
+        }
+
+        .toggle-switch input:checked::before {
+            transform: translateX(20px);
+        }
+
+        /* Результаты */
+        .results {
+            margin-top: 20px;
+        }
+
+        .result-stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 16px;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .result-item {
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .result-source {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem;
+            color: #60a5fa;
+            background: #1e293b;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .result-score {
+            background: #334155;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .result-headers {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .header-tag {
+            background: #2563eb20;
+            color: #93c5fd;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            border: 1px solid #2563eb40;
+        }
+
+        .result-content {
+            color: #cbd5e1;
+            line-height: 1.6;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 12px;
+            background: #1e293b;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+
+        .answer-content {
+            color: #e2e8f0;
+            line-height: 1.7;
+            padding: 20px;
+            background: #0f172a;
+            border-radius: 12px;
+            border: 1px solid #334155;
+        }
+
+        .answer-content p {
+            margin-bottom: 16px;
+        }
+
+        .answer-content pre {
+            background: #1e293b;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 16px 0;
+        }
+
+        .answer-content code {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 40px;
+            color: #94a3b8;
+        }
+
+        .loading i {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #7f1d1d20;
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+            padding: 16px;
+            border-radius: 10px;
+            margin-top: 16px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* Футер */
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #475569;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Заголовок -->
+        <div class="header">
+            <h1><i class="fas fa-brain"></i> RAG API</h1>
+            <p class="subtitle">Гибридный поиск по техническим заметкам</p>
+            <span class="api-url">
+                <i class="fas fa-circle" style="font-size: 8px; vertical-align: middle;"></i>
+                http://localhost:8000
+            </span>
+        </div>
+
+        <!-- Вкладки -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('search')">
+                <i class="fas fa-search"></i> Поиск документов
+            </button>
+            <button class="tab" onclick="switchTab('rag')">
+                <i class="fas fa-robot"></i> RAG генерация
+            </button>
+        </div>
+
+        <!-- Панель поиска -->
+        <div id="search-panel" class="panel active">
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-sliders-h"></i> Параметры поиска
+                </div>
+                <div class="row">
+                    <div class="form-group" style="flex: 2;">
+                        <label><i class="fas fa-question"></i> Поисковый запрос</label>
+                        <input type="text" id="search-query" placeholder="Например: Kafka, мониторинг ML, ошибки в Go..." value="Kafka">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-list"></i> Количество результатов</label>
+                        <input type="number" id="search-limit" min="1" max="20" value="5">
+                    </div>
+                </div>
+                <div class="row" style="justify-content: space-between; align-items: center;">
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="hybrid-search" checked>
+                        <label for="hybrid-search">
+                            <i class="fas fa-merge"></i> Гибридный поиск (Dense + BM25)
+                        </label>
+                    </div>
+                    <button class="btn btn-primary" onclick="performSearch()">
+                        <i class="fas fa-search"></i> Найти
+                    </button>
+                </div>
+            </div>
+
+            <div id="search-results" class="results">
+                <!-- Результаты появятся здесь -->
+                <div class="empty-state">
+                    <i class="fas fa-arrow-up"></i>
+                    <p>Введите запрос и нажмите "Найти"</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Панель RAG -->
+        <div id="rag-panel" class="panel">
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-message"></i> Задайте вопрос
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-question-circle"></i> Ваш вопрос</label>
+                    <textarea id="rag-question" placeholder="Например: Как настроить мониторинг ML моделей? Какие ошибки часто встречаются в Go?">Как мониторить ML модели в продакшене?</textarea>
+                </div>
+                <div class="row" style="justify-content: space-between; align-items: center;">
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="rag-hybrid" checked>
+                        <label for="rag-hybrid">
+                            <i class="fas fa-merge"></i> Использовать гибридный поиск
+                        </label>
+                    </div>
+                    <button class="btn btn-primary" onclick="performRAG()">
+                        <i class="fas fa-paper-plane"></i> Сгенерировать ответ
+                    </button>
+                </div>
+            </div>
+
+            <div id="rag-results" class="results">
+                <!-- Результаты RAG появятся здесь -->
+                <div class="empty-state">
+                    <i class="fas fa-comment-dots"></i>
+                    <p>Задайте вопрос и нажмите "Сгенерировать ответ"</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <i class="far fa-clock"></i> Тестовый интерфейс RAG API • v1.0.0
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        // Настройка marked для Markdown
+        marked.setOptions({
+            highlight: function(code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    return hljs.highlight(code, { language: lang }).value;
+                }
+                return hljs.highlightAuto(code).value;
+            },
+            breaks: true,
+            gfm: true
+        });
+
+        // Переключение вкладок
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            
+            if (tab === 'search') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('search-panel').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('rag-panel').classList.add('active');
+            }
+        }
+
+        // Показать загрузку
+        function showLoading(containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `
+                <div class="loading">
+                    <i class="fas fa-spinner"></i> Выполняется запрос...
+                </div>
+            `;
+        }
+
+        // Показать ошибку
+        function showError(containerId, message) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `
+                <div class="error">
+                    <i class="fas fa-exclamation-triangle"></i> ${message}
+                </div>
+            `;
+        }
+
+        // Форматирование заголовков
+        function formatHeaders(headers) {
+            if (!headers || Object.keys(headers).length === 0) return '';
+            return Object.entries(headers)
+                .filter(([_, v]) => v)
+                .map(([k, v]) => `<span class="header-tag"><i class="fas fa-hashtag"></i> ${v}</span>`)
+                .join('');
+        }
+
+        // Выполнить поиск
+        async function performSearch() {
+            const query = document.getElementById('search-query').value.trim();
+            const limit = parseInt(document.getElementById('search-limit').value) || 5;
+            const hybrid = document.getElementById('hybrid-search').checked;
+            
+            if (!query) {
+                alert('Введите поисковый запрос');
+                return;
+            }
+            
+            showLoading('search-results');
+            
+            try {
+                const response = await fetch(`${API_BASE}/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, limit, hybrid })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || 'Ошибка сервера');
+                }
+                
+                const data = await response.json();
+                displaySearchResults(data, query, hybrid);
+            } catch (error) {
+                showError('search-results', error.message);
+            }
+        }
+
+        // Отобразить результаты поиска
+        function displaySearchResults(results, query, hybrid) {
+            const container = document.getElementById('search-results');
+            
+            if (!results || results.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <p>По запросу "${query}" ничего не найдено</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const mode = hybrid ? 'Гибридный (Dense + BM25)' : 'Семантический (Dense)';
+            
+            let html = `
+                <div class="result-stats">
+                    <span><i class="fas fa-file-alt"></i> Найдено: ${results.length} документов</span>
+                    <span><i class="fas fa-cog"></i> Режим: ${mode}</span>
+                    <span><i class="fas fa-search"></i> Запрос: "${query}"</span>
+                </div>
+            `;
+            
+            results.forEach((result, index) => {
+                const headers = formatHeaders(result.headers || {});
+                const scorePercent = result.score ? (result.score * 100).toFixed(1) : 'N/A';
+                
+                html += `
+                    <div class="result-item">
+                        <div class="result-header">
+                            <span class="result-source">
+                                <i class="far fa-file"></i> ${result.source || 'unknown'}
+                            </span>
+                            <span class="result-score">
+                                <i class="fas fa-chart-line"></i> Релевантность: ${scorePercent}%
+                            </span>
+                        </div>
+                        ${headers ? `<div class="result-headers">${headers}</div>` : ''}
+                        <div class="result-content">
+                            ${escapeHtml(result.text || '')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Выполнить RAG
+        async function performRAG() {
+            const question = document.getElementById('rag-question').value.trim();
+            const useHybrid = document.getElementById('rag-hybrid').checked;
+            
+            if (!question) {
+                alert('Введите вопрос');
+                return;
+            }
+            
+            showLoading('rag-results');
+            
+            try {
+                const response = await fetch(`${API_BASE}/rag`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question, use_hybrid_search: useHybrid })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || 'Ошибка сервера');
+                }
+                
+                const data = await response.json();
+                displayRAGResults(data, question, useHybrid);
+            } catch (error) {
+                showError('rag-results', error.message);
+            }
+        }
+
+        // Отобразить результаты RAG
+        function displayRAGResults(data, question, useHybrid) {
+            const container = document.getElementById('rag-results');
+            
+            const mode = useHybrid ? 'Гибридный (Dense + BM25)' : 'Семантический (Dense)';
+            
+            // Рендерим Markdown ответ
+            const answerHtml = marked.parse(data.answer || 'Нет ответа');
+            
+            let html = `
+                <div class="result-stats">
+                    <span><i class="fas fa-cog"></i> Режим: ${mode}</span>
+                    <span><i class="fas fa-database"></i> Использовано источников: ${data.sources?.length || 0}</span>
+                </div>
+                
+                <div class="card" style="margin-top: 0;">
+                    <div class="card-title">
+                        <i class="fas fa-reply"></i> Ответ
+                    </div>
+                    <div class="answer-content">
+                        ${answerHtml}
+                    </div>
+                </div>
+            `;
+            
+            // Добавляем источники
+            if (data.sources && data.sources.length > 0) {
+                html += `
+                    <div class="card">
+                        <div class="card-title">
+                            <i class="fas fa-book-open"></i> Источники
+                        </div>
+                `;
+                
+                data.sources.forEach((source, index) => {
+                    const headers = formatHeaders(source.headers || {});
+                    
+                    html += `
+                        <div class="result-item" style="margin-bottom: 12px;">
+                            <div class="result-header">
+                                <span class="result-source">
+                                    <i class="far fa-file"></i> ${source.source || 'unknown'}
+                                </span>
+                                <span class="result-score">
+                                    <i class="fas fa-chart-line"></i> ${source.score ? (source.score * 100).toFixed(1) : 'N/A'}%
+                                </span>
+                            </div>
+                            ${headers ? `<div class="result-headers">${headers}</div>` : ''}
+                            <div class="result-content" style="max-height: 150px;">
+                                ${escapeHtml(source.text || '')}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`;
+            }
+            
+            container.innerHTML = html;
+            
+            // Применяем подсветку синтаксиса к блокам кода
+            document.querySelectorAll('.answer-content pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        }
+
+        // Экранирование HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Обработка Enter в полях ввода
+        document.getElementById('search-query')?.addEventListener('keypress', e => {
+            if (e.key === 'Enter') performSearch();
+        });
+        
+        document.getElementById('rag-question')?.addEventListener('keypress', e => {
+            if (e.ctrlKey && e.key === 'Enter') performRAG();
+        });
+
+        // Примеры запросов (можно добавить в интерфейс)
+        console.log('RAG API Test Interface loaded. API Base:', API_BASE);
+    </script>
+</body>
+</html>
