@@ -1,0 +1,46 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - ./qdrant_storage:/qdrant/storage
+    environment:
+      - QDRANT__LOG_LEVEL=INFO
+    networks:
+      - ml-net
+    restart: unless-stopped
+
+  api:
+    build: ./api
+    container_name: rag-api
+    ports:
+      - "8000:8000"
+    environment:
+      QDRANT_HOST: qdrant
+      OLLAMA_HOST: http://host.docker.internal:11434
+    depends_on:
+      - qdrant
+    networks:
+      - ml-net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  ingest:
+    build: ./ingest
+    container_name: rag-ingest
+    environment:
+      QDRANT_HOST: qdrant
+      OLLAMA_HOST: http://host.docker.internal:11434
+    networks:
+      - ml-net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    profiles: ["manual"]  # Не стартует автоматически с `docker compose up`
+
+networks:
+  ml-net:
+    driver: bridge

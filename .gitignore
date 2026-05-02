@@ -6,8 +6,6 @@ __pycache__
 .env
 venv/
 .venv/
-docker-compose*.yml
-Dockerfile
 .dockerignore
 README.md
 tests/
